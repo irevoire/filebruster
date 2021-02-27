@@ -1,5 +1,4 @@
 use crate::json::FileInfo;
-use rocket::http::Status;
 use rocket::State;
 use rocket_contrib::json::Json;
 use std::path::{Path, PathBuf};

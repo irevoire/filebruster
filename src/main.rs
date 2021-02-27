@@ -1,15 +1,10 @@
 #![feature(proc_macro_hygiene, decl_macro)]
 
 mod json;
-mod resource;
+mod resources;
 
 #[macro_use]
 extern crate rocket;
-
-#[get("/")]
-fn hello() -> &'static str {
-    "Hello, world!"
-}
 
 #[get("/login")]
 fn login() -> &'static str {
@@ -29,6 +24,6 @@ fn main() {
 
     rocket::ignite()
         .manage(root)
-        .mount("/", routes![hello, login, renew, resource::get_resources])
+        .mount("/api", routes![login, renew, resources::get_resources])
         .launch();
 }
