@@ -1,13 +1,12 @@
 use crate::json::FileInfo;
 use rocket::http::Status;
 use rocket::State;
+use rocket_contrib::json::Json;
 use std::path::{Path, PathBuf};
 
 #[get("/resources/<path..>")]
-pub fn get_resources(path: PathBuf, root: State<&'static Path>) -> Result<String, Status> {
-    let path = root.join(path);
+pub fn get_resources(path: PathBuf, root: State<&'static Path>) -> Option<Json<FileInfo>> {
+    let base = FileInfo::from_path(&root, &path).ok()?;
 
-    let base = FileInfo::from_path(&path).map_err(|_| Status::NotFound)?;
-
-    Ok(path.to_str().unwrap().to_string())
+    Some(Json(base))
 }
