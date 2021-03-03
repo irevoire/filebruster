@@ -15,4 +15,8 @@ mime_guess = "2.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 rocket = "0.4.7"
-rocket_contrib = "0.4"
+
+[dependencies.rocket_contrib]
+version = "0.4"
+default-features = true
+features = ["tera_templates"]
