@@ -6,13 +6,14 @@ mod resources;
 #[macro_use]
 extern crate rocket;
 
-use rocket_contrib::templates::Template;
+use rocket::State;
+use rocket::response::content::Html;
 use std::path::Path;
 use rocket_contrib::serve::StaticFiles;
-use rocket::State;
-use std::collections::HashMap;
+use tera::Context;
+use tera::Tera;
 
-#[get("/login")]
+#[post("/login")]
 fn login() -> &'static str {
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoxLCJsb2NhbGUiOiJlbiIsInZpZXdNb2RlIjoibW9zYWljIiwic2luZ2xlQ2xpY2siOmZhbHNlLCJwZXJtIjp7ImFkbWluIjpmYWxzZSwiZXhlY3V0ZSI6dHJ1ZSwiY3JlYXRlIjpmYWxzZSwicmVuYW1lIjpmYWxzZSwibW9kaWZ5IjpmYWxzZSwiZGVsZXRlIjpmYWxzZSwic2hhcmUiOnRydWUsImRvd25sb2FkIjp0cnVlfSwiY29tbWFuZHMiOltdLCJsb2NrUGFzc3dvcmQiOmZhbHNlLCJoaWRlRG90ZmlsZXMiOmZhbHNlfSwiZXhwIjoxNjE0NDMxMDAzLCJpYXQiOjE2MTQ0MjM4MDMsImlzcyI6IkZpbGUgQnJvd3NlciJ9.BNpqWQIPIK6_nEFrIpAHYTTbfOhwex_QyWzfZkcf4a8"
 }
@@ -22,14 +23,14 @@ fn renew() -> &'static str {
     login()
 }
 
-#[get("/**", rank = 4)]
-fn file(tmplParams: State<HashMap<String, String>>) -> Template {
-    let mut tmplParams: HashMap<String, String> = HashMap::new();
-    tmplParams.insert("ReCaptcha".to_string(), "false".to_string());
-    tmplParams.insert("ReCaptchaHost".to_string(), "".to_string());
-    tmplParams.insert("Name".to_string(), "FileBruster".to_string());
-    tmplParams.insert("StaticURL".to_string(), "/static".to_string());
-    tmplParams.insert("Json".to_string(), r#"{
+#[get("/", rank = 4)]
+fn file(tmpl: State<String>) -> Html<String> {
+    let mut tmpl_params: Context = Context::new();
+    tmpl_params.insert("ReCaptcha", &false);
+    tmpl_params.insert("ReCaptchaHost", "");
+    tmpl_params.insert("Name", "FileBruster");
+    tmpl_params.insert("StaticURL", "/static");
+    tmpl_params.insert("Json", r#"{
             "AuthMethod": "noauth",
             "BaseURL": "",
             "CSS": false,
@@ -45,26 +46,29 @@ fn file(tmplParams: State<HashMap<String, String>>) -> Template {
             "StaticURL": "/static",
             "Theme": "dark",
             "Version": "2.11.0"
-          }"#.to_string());
-    tmplParams.insert("Theme".to_string(), "dark".to_string());
-    tmplParams.insert("CSS".to_string(), "false".to_string());
-    Template::render("index", &tmplParams)
+          }"#);
+    tmpl_params.insert("Theme", "dark");
+    tmpl_params.insert("CSS", &false);
+    Html(Tera::one_off(&tmpl, &tmpl_params, false).unwrap())
 }
 
 fn main() {
     let root = Box::new(std::env::current_dir().unwrap());
     let root: &'static Path = Box::leak(root);
 
+    let file = String::from_utf8(std::fs::read("filebrowser/frontend/dist/index.html").unwrap()).unwrap();
+    let tmpl = file.replace("[{[ if .", "{% if ")
+                .replace("-]}]", "%}")
+                .replace("[{[ end ]}]", "{% endif %}")
+                .replace("[{[ else ]}]", "{% else %}")
+                .replace("[{[ .", "{{ ")
+                .replace("]}]", "}}");
+
     rocket::ignite()
         .manage(root)
-        .mount("/api", routes![login, renew, resources::get_resources])
+        .manage(tmpl)
+        .mount("/api", routes![login, renew, resources::get_resources, resources::get_resources_root])
         .mount("/static", StaticFiles::from("filebrowser/frontend/dist"))
         .mount("/", routes![file])
-        .attach(Template::custom(|engines| {
-            let mut file = String::from_utf8(std::fs::read("filebrowser/frontend/dist/index.html").unwrap()).unwrap();
-            let tmpl = file.replace("[{[ .", "{{ ")
-                           .replace("]}]", "}}");
-            engines.tera.add_raw_template("index", &tmpl);
-        }))
         .launch();
 }
