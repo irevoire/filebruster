@@ -6,10 +6,10 @@ mod resources;
 #[macro_use]
 extern crate rocket;
 
-use rocket::State;
 use rocket::response::content::Html;
-use std::path::Path;
+use rocket::State;
 use rocket_contrib::serve::StaticFiles;
+use std::path::Path;
 use tera::Context;
 use tera::Tera;
 
@@ -30,7 +30,9 @@ fn file(tmpl: State<String>) -> Html<String> {
     tmpl_params.insert("ReCaptchaHost", "");
     tmpl_params.insert("Name", "FileBruster");
     tmpl_params.insert("StaticURL", "/static");
-    tmpl_params.insert("Json", r#"{
+    tmpl_params.insert(
+        "Json",
+        r#"{
             "AuthMethod": "noauth",
             "BaseURL": "",
             "CSS": false,
@@ -46,7 +48,8 @@ fn file(tmpl: State<String>) -> Html<String> {
             "StaticURL": "/static",
             "Theme": "dark",
             "Version": "2.11.0"
-          }"#);
+          }"#,
+    );
     tmpl_params.insert("Theme", "dark");
     tmpl_params.insert("CSS", &false);
     Html(Tera::one_off(&tmpl, &tmpl_params, false).unwrap())
@@ -56,18 +59,28 @@ fn main() {
     let root = Box::new(std::env::current_dir().unwrap());
     let root: &'static Path = Box::leak(root);
 
-    let file = String::from_utf8(std::fs::read("filebrowser/frontend/dist/index.html").unwrap()).unwrap();
-    let tmpl = file.replace("[{[ if .", "{% if ")
-                .replace("-]}]", "%}")
-                .replace("[{[ end ]}]", "{% endif %}")
-                .replace("[{[ else ]}]", "{% else %}")
-                .replace("[{[ .", "{{ ")
-                .replace("]}]", "}}");
+    let file =
+        String::from_utf8(std::fs::read("filebrowser/frontend/dist/index.html").unwrap()).unwrap();
+    let tmpl = file
+        .replace("[{[ if .", "{% if ")
+        .replace("-]}]", "%}")
+        .replace("[{[ end ]}]", "{% endif %}")
+        .replace("[{[ else ]}]", "{% else %}")
+        .replace("[{[ .", "{{ ")
+        .replace("]}]", "}}");
 
     rocket::ignite()
         .manage(root)
         .manage(tmpl)
-        .mount("/api", routes![login, renew, resources::get_resources, resources::get_resources_root])
+        .mount(
+            "/api",
+            routes![
+                login,
+                renew,
+                resources::get_resources,
+                resources::get_resources_root
+            ],
+        )
         .mount("/static", StaticFiles::from("filebrowser/frontend/dist"))
         .mount("/", routes![file])
         .launch();
