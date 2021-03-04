@@ -11,8 +11,8 @@ pub fn get_resources_root(root: State<&'static Path>) -> Option<Json<FileInfo>> 
 }
 
 #[get("/resources/<path..>")]
-pub fn get_resources(path: Option<PathBuf>, root: State<&'static Path>) -> Option<Json<FileInfo>> {
-    let base = FileInfo::from_path(&root, &path.unwrap_or(PathBuf::new())).ok()?;
+pub fn get_resources(path: PathBuf, root: State<&'static Path>) -> Option<Json<FileInfo>> {
+    let base = FileInfo::from_path(&root, &path).ok()?;
 
     Some(Json(base))
 }
