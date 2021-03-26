@@ -66,7 +66,7 @@ impl FileInfo {
                 .unwrap_or("fuck you".to_string());
         }
 
-        self.path = route.to_str().unwrap().to_string();
+        self.path = format!("/{}", route.display());
         self.size = metadata.len();
         let time: chrono::DateTime<chrono::Utc> = metadata.modified().unwrap().into();
         self.mod_time = time.to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
