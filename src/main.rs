@@ -1,8 +1,8 @@
 #![feature(proc_macro_hygiene, decl_macro)]
 
 mod json;
-mod r#static;
 mod resources;
+mod r#static;
 
 #[macro_use]
 extern crate rocket;
@@ -20,12 +20,11 @@ fn renew() -> &'static str {
     login()
 }
 
-
 fn main() {
     let root = Box::new(std::env::current_dir().unwrap());
     let root: &'static Path = Box::leak(root);
 
-    let file =r#static::Static::get("index.html").unwrap();
+    let file = r#static::Static::get("index.html").expect("index.html");
     let file = String::from_utf8(file.to_vec()).unwrap();
 
     let tmpl = file
@@ -48,7 +47,7 @@ fn main() {
                 resources::get_resources_root
             ],
         )
-        .mount("/static", StaticFiles::from("filebrowser/frontend/dist"))
+        .mount("/static", routes![r#static::static_files])
         .mount("/", routes![r#static::file])
         .launch();
 }

@@ -1,8 +1,13 @@
-use tera::Context;
-use rocket::response::content::{Html};
+use std::path::PathBuf;
+
 use rocket::State;
-use tera::Tera;
+use rocket::{
+    http::ContentType,
+    response::content::{Content, Html},
+};
 use rust_embed::RustEmbed;
+use tera::Context;
+use tera::Tera;
 
 #[derive(RustEmbed)]
 #[folder = "filebrowser/frontend/dist"]
@@ -38,4 +43,19 @@ pub fn file(tmpl: State<String>) -> Html<String> {
     tmpl_params.insert("Theme", "dark");
     tmpl_params.insert("CSS", &false);
     Html(Tera::one_off(&tmpl, &tmpl_params, false).unwrap())
+}
+
+#[get("/<path..>", rank = 4)]
+pub fn static_files(path: PathBuf) -> Option<Content<String>> {
+    dbg!("called with", &path);
+    let file = Static::get(&path.to_str()?)?;
+    let file = String::from_utf8(file.to_vec()).unwrap();
+
+    match path.extension().unwrap().to_str()? {
+        "js" => Some(Content(ContentType::JavaScript, file)),
+        "html" => Some(Content(ContentType::HTML, file)),
+        "css" => Some(Content(ContentType::CSS, file)),
+        "svg" => Some(Content(ContentType::SVG, file)),
+        _ => None,
+    }
 }
