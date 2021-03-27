@@ -1,17 +1,14 @@
 #![feature(proc_macro_hygiene, decl_macro)]
 
 mod json;
+mod r#static;
 mod resources;
 
 #[macro_use]
 extern crate rocket;
 
-use rocket::response::content::Html;
-use rocket::State;
 use rocket_contrib::serve::StaticFiles;
 use std::path::Path;
-use tera::Context;
-use tera::Tera;
 
 #[post("/login")]
 fn login() -> &'static str {
@@ -23,44 +20,14 @@ fn renew() -> &'static str {
     login()
 }
 
-#[get("/", rank = 4)]
-fn file(tmpl: State<String>) -> Html<String> {
-    let mut tmpl_params: Context = Context::new();
-    tmpl_params.insert("ReCaptcha", &false);
-    tmpl_params.insert("ReCaptchaHost", "");
-    tmpl_params.insert("Name", "FileBruster");
-    tmpl_params.insert("StaticURL", "/static");
-    tmpl_params.insert(
-        "Json",
-        r#"{
-            "AuthMethod": "noauth",
-            "BaseURL": "",
-            "CSS": false,
-            "DisableExternal": false,
-            "EnableExec": false,
-            "EnableThumbs": true,
-            "LoginPage": false,
-            "Name": "",
-            "NoAuth": true,
-            "ReCaptcha": false,
-            "ResizePreview": true,
-            "Signup": false,
-            "StaticURL": "/static",
-            "Theme": "dark",
-            "Version": "2.11.0"
-          }"#,
-    );
-    tmpl_params.insert("Theme", "dark");
-    tmpl_params.insert("CSS", &false);
-    Html(Tera::one_off(&tmpl, &tmpl_params, false).unwrap())
-}
 
 fn main() {
     let root = Box::new(std::env::current_dir().unwrap());
     let root: &'static Path = Box::leak(root);
 
-    let file =
-        String::from_utf8(std::fs::read("filebrowser/frontend/dist/index.html").unwrap()).unwrap();
+    let file =r#static::Static::get("index.html").unwrap();
+    let file = String::from_utf8(file.to_vec()).unwrap();
+
     let tmpl = file
         .replace("[{[ if .", "{% if ")
         .replace("-]}]", "%}")
@@ -82,6 +49,6 @@ fn main() {
             ],
         )
         .mount("/static", StaticFiles::from("filebrowser/frontend/dist"))
-        .mount("/", routes![file])
+        .mount("/", routes![r#static::file])
         .launch();
 }
