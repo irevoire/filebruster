@@ -7,7 +7,6 @@ mod r#static;
 #[macro_use]
 extern crate rocket;
 
-use rocket_contrib::serve::StaticFiles;
 use std::path::Path;
 
 #[post("/login")]

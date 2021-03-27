@@ -52,7 +52,10 @@ pub fn static_files(path: PathBuf) -> Option<Content<String>> {
     let file = String::from_utf8(file.to_vec()).unwrap();
 
     match path.extension().unwrap().to_str()? {
-        "js" => Some(Content(ContentType::JavaScript, file)),
+        "js" => {
+            let file = file.replace("[{[ .StaticURL ]}]", "/static");
+            Some(Content(ContentType::JavaScript, file))
+        }
         "html" => Some(Content(ContentType::HTML, file)),
         "css" => Some(Content(ContentType::CSS, file)),
         "svg" => Some(Content(ContentType::SVG, file)),
