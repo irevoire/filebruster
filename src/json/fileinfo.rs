@@ -55,7 +55,7 @@ impl FileInfo {
         if self.is_dir {
             self.name = path.file_name().unwrap().to_str().unwrap().to_string();
         } else {
-            self.name = path.file_stem().unwrap().to_str().unwrap().to_string();
+            self.name = path.file_name().unwrap().to_str().unwrap().to_string();
             self.extension = path
                 .extension()
                 .map(|path| path.to_str().unwrap().to_string())
@@ -63,7 +63,10 @@ impl FileInfo {
             self.file_type = mime_guess::from_ext(&self.extension)
                 .first()
                 .map(|guess| guess.type_().as_str().to_string())
-                .unwrap_or("fuck you".to_string());
+                .unwrap_or("blob".to_string());
+            if self.file_type == "text" && self.size < 10_000 {
+                self.content = std::fs::read_to_string(path)?;
+            }
         }
 
         self.path = format!("/{}", route.display());
