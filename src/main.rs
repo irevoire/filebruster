@@ -1,7 +1,5 @@
-use axum::{
-    routing::{get, post},
-    Router,
-};
+use axum::routing::{get, post};
+use axum::Router;
 
 mod json;
 mod resources;

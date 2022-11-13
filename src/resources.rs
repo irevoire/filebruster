@@ -1,8 +1,10 @@
-use crate::json::FileInfo;
-use axum::{extract, routing::get, Router};
-use axum::{response, Extension};
 use std::path::PathBuf;
 use std::sync::Arc;
+
+use axum::routing::get;
+use axum::{extract, response, Extension, Router};
+
+use crate::json::FileInfo;
 
 pub fn setup_router(path: PathBuf) -> Router {
     Router::new()

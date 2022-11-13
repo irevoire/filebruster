@@ -1,9 +1,11 @@
-use super::Listing;
-use anyhow::Result;
-use serde::Serialize;
 use std::collections::HashMap;
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
+
+use anyhow::Result;
+use serde::Serialize;
+
+use super::Listing;
 
 #[derive(Debug, Default, Serialize)]
 pub struct FileInfo {

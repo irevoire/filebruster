@@ -1,7 +1,9 @@
-use super::FileInfo;
+use std::path::Path;
+
 use anyhow::Result;
 use serde::Serialize;
-use std::path::Path;
+
+use super::FileInfo;
 
 #[derive(Debug, Default, Serialize)]
 pub struct Listing {

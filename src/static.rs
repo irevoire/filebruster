@@ -5,11 +5,9 @@ use axum::body::StreamBody;
 use axum::headers::ContentType;
 use axum::response::{self, IntoResponse};
 use axum::routing::get;
-use axum::{extract, TypedHeader};
-use axum::{Extension, Router};
+use axum::{extract, Extension, Router, TypedHeader};
 use rust_embed::RustEmbed;
-use tera::Context;
-use tera::Tera;
+use tera::{Context, Tera};
 use tokio::io::BufReader;
 use tokio_util::io::ReaderStream;
 
