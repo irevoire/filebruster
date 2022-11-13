@@ -1,18 +1,29 @@
 use crate::json::FileInfo;
-use rocket::State;
-use rocket_contrib::json::Json;
-use std::path::{Path, PathBuf};
+use axum::{extract, routing::get, Router};
+use axum::{response, Extension};
+use std::path::PathBuf;
+use std::sync::Arc;
 
-#[get("/resources")]
-pub fn get_resources_root(root: State<&'static Path>) -> Option<Json<FileInfo>> {
-    let base = FileInfo::from_path(&root, &PathBuf::new()).ok()?;
-
-    Some(Json(base))
+pub fn setup_router(path: PathBuf) -> Router {
+    Router::new()
+        .route("/", get(get_resources_root))
+        .route("/:path", get(get_resources))
+        .layer(Extension(path))
 }
 
-#[get("/resources/<path..>")]
-pub fn get_resources(path: PathBuf, root: State<&'static Path>) -> Option<Json<FileInfo>> {
-    let base = FileInfo::from_path(&root, &path).ok()?;
+#[axum::debug_handler]
+pub async fn get_resources_root(
+    Extension(root): Extension<Arc<PathBuf>>,
+) -> response::Json<Option<FileInfo>> {
+    let base = FileInfo::from_path(&root, &PathBuf::new()).ok();
+    response::Json(base)
+}
 
-    Some(Json(base))
+#[axum::debug_handler]
+pub async fn get_resources(
+    extract::Path(path): extract::Path<PathBuf>,
+    Extension(root): Extension<Arc<PathBuf>>,
+) -> response::Json<Option<FileInfo>> {
+    let base = FileInfo::from_path(&root, &path).ok();
+    response::Json(base)
 }
